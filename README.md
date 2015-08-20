@@ -35,14 +35,14 @@ Simply import the library, then call:
 There is also a "helper" function called `Check()` which takes the results of `Get()`, checks the Speed, Density and Bz (the three measurements aurora fans are most interested in) and gives you a value between -1 and 2 which indicates possible aurora activity:
 
     -1 = ACE spacecraft returned -999.9 for Bz, Density and Speed. This indicates no usable data
-    0 = Bz is greater than the warning threshold, while Speed and Density and below the warning threshold
+    0 = Bz is greater than the warning threshold (lower = better), while Speed and Density and below the warning threshold
     1 = Bz is less than the warning threshold, but greater than the alert threshold. Speed and density are greater than their respective warning thresholds, but less than their alert thresholds
     2 = Bz is less than the alert threshold, and Speed and Density are greater than the alert thresholds. Grab your camera and run!
 
 Helping out
 ===========
 
-I've only just become interested in auroras (and only captured my first one in August 2015), so I might be
+I've only just become interested in auroras (and only captured my first one in August 2015), so the data contained here might not be correct, or I might be grabbing the wrong data, or not enough data. I strongly encourage anyone with more experience in aurora hunting to suggest changes, either code-wise, or data-wise. You don't have to be a programmer to help!
 
 To-Do:
 ======
