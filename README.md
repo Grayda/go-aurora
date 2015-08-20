@@ -44,7 +44,7 @@ I've only just become interested in auroras (and only captured my first one in A
 To-Do:
 ======
 
--[ ] Look for Aurora Australis data, as this data may be for Aurora Borealis only
--[ ] Modify the code so it grabs all of the data, instead of just the last (latest) line
--[ ] More detail in the Check() func, as 2/3 data points could be bad, but still reports as 0
--[ ] Add Kp data
+- [ ] Look for Aurora Australis data, as this data may be for Aurora Borealis only
+- [ ] Modify the code so it grabs all of the data, instead of just the last (latest) line
+- [ ] More detail in the Check() func, as 2/3 data points could be bad, but still reports as 0
+- [ ] Add Kp data from ftp://ftp.swpc.noaa.gov:21/pub/lists//wingkp/wingkp_list.txt (or similar)
