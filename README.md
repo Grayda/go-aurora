@@ -28,6 +28,9 @@ Simply import the library, then call:
     Bt
     Lat
     Long
+    Kp
+    Kp1hour
+    Kp4hours
 
 There is also a "helper" function called `Check()` which takes the results of `Get()`, checks the Speed, Density and Bz (the three measurements aurora fans are most interested in) and gives you a value between -1 and 2 which indicates possible aurora activity:
 
