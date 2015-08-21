@@ -14,7 +14,7 @@ func main() {
 	}
 
 	fmt.Println()
-	switch aurora.Check(results) {
+	switch aurora.Check(results, 0) {
 	case 2:
 		fmt.Println("Gauges are red! Grab your camera!")
 	case 1:
