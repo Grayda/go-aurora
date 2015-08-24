@@ -2,6 +2,7 @@ package aurora
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"regexp"
 	"sort"
@@ -33,10 +34,17 @@ const (
 	KpOrange = 4
 	KpRed    = 5
 
+	KpGreenWeight  = -5
+	KpYellowWeight = 2
+	KpOrangeWeight = 5
+	KpRedWeight    = 10
+
 	GreenWeight  = -10
 	YellowWeight = 10
 	OrangeWeight = 15
 	RedWeight    = 25
+
+	NoDataWeight = -50
 )
 
 var MissingData = -999.9
@@ -142,8 +150,108 @@ func extractData(r io.Reader) map[int][]string {
 // 0 = Density and Speed are less than their associated Warn values, Bz is greater than the associated warn levels
 // 1 = Density and Speed are greater than the warn values, but less than the alert values, Bz is less than the warn level, but greater than the alert level
 // 2 = Density and Speed are greater than the alert values, Bz is less than the alert value
-func Check(results map[int]map[string]float64, kpResults map[int]map[string]float64, i int) int {
-	var score int
+func Check(results map[int]map[string]float64, kpResults map[int]map[string]float64, i int) (score, bz, speed, density, kp int) {
 
-	return 0
+	if results[i]["Bz"] <= NoData {
+		fmt.Println("No data for Bz")
+		score += NoDataWeight
+	}
+	if results[i]["Speed"] <= NoData {
+		fmt.Println("No data for Speed")
+		score += NoDataWeight
+	}
+	if results[i]["Density"] <= NoData {
+		fmt.Println("No data for Density")
+		score += NoDataWeight
+	}
+	if results[i]["Kp"] <= NoData {
+		fmt.Println("No data for Kp")
+		score += NoDataWeight
+	}
+
+	if results[i]["Bz"] <= BzGreen && results[i]["Bz"] >= BzYellow {
+		bz = 0
+		fmt.Println("Bz Green")
+		score += GreenWeight
+	} else if results[i]["Bz"] <= BzYellow && results[i]["Bz"] >= BzOrange {
+		bz = 1
+		fmt.Println("Bz Yellow")
+		score += YellowWeight
+	} else if results[i]["Bz"] <= BzOrange && results[i]["Bz"] >= BzRed {
+		bz = 2
+		fmt.Println("Bz Orange")
+		score += OrangeWeight
+	} else if results[i]["Bz"] <= BzRed {
+		bz = 3
+		fmt.Println("Bz Red")
+		score += RedWeight
+	} else {
+		fmt.Println("No Bz data")
+		bz = -1
+	}
+
+	if results[i]["Speed"] >= SpeedGreen && results[i]["Speed"] <= SpeedYellow {
+		speed = 0
+		fmt.Println("Speed Green")
+		score += GreenWeight
+	} else if results[i]["Speed"] >= SpeedYellow && results[i]["Speed"] <= SpeedOrange {
+		speed = 1
+		fmt.Println("Speed Yellow")
+		score += YellowWeight
+	} else if results[i]["Speed"] >= SpeedOrange && results[i]["Speed"] <= SpeedRed {
+		speed = 2
+		fmt.Println("Speed Orange")
+		score += OrangeWeight
+	} else if results[i]["Speed"] >= SpeedRed {
+		speed = 3
+		fmt.Println("Speed Red")
+		score += RedWeight
+	} else {
+		fmt.Println("No Speed data")
+		speed = -1
+	}
+
+	if results[i]["Density"] >= DensityGreen && results[i]["Density"] <= DensityYellow {
+		density = 0
+		fmt.Println("Density Green")
+		score += GreenWeight
+	} else if results[i]["Density"] >= DensityYellow && results[i]["Density"] <= DensityOrange {
+		density = 1
+		fmt.Println("Density Yellow")
+		score += YellowWeight
+	} else if results[i]["Density"] >= DensityOrange && results[i]["Density"] <= DensityRed {
+		density = 2
+		fmt.Println("Density Orange")
+		score += OrangeWeight
+	} else if results[i]["Density"] >= DensityRed {
+		density = 3
+		fmt.Println("Density Red")
+		score += RedWeight
+	} else {
+		fmt.Println("No Density data")
+		density = -1
+	}
+
+	if kpResults[i]["Kp"] >= KpGreen && kpResults[i]["Kp"] <= KpYellow {
+		kp = 0
+		fmt.Println("Kp Green")
+		score += KpGreenWeight
+	} else if kpResults[i]["Kp"] >= KpYellow && kpResults[i]["Kp"] <= KpOrange {
+		kp = 1
+		fmt.Println("Kp Yellow")
+		score += KpYellowWeight
+	} else if kpResults[i]["Kp"] >= KpOrange && kpResults[i]["Kp"] <= KpRed {
+		kp = 2
+		fmt.Println("Kp Orange")
+		score += KpOrangeWeight
+	} else if kpResults[i]["Kp"] >= KpRed {
+		kp = 3
+		fmt.Println("Kp Red")
+		score += KpRedWeight
+	} else {
+		fmt.Println("No Kp data")
+		kp = -1
+	}
+
+	return score, bz, speed, density, kp
 }

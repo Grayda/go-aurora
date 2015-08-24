@@ -24,15 +24,10 @@ func main() {
 	fmt.Println()
 	fmt.Println("Checking these values against their thresholds..")
 
-	switch aurora.Check(results, 0) {
-	case 2:
-		fmt.Println("Gauges are red! Grab your camera!")
-	case 1:
-		fmt.Println("Gauges are in the orange. Prepare your camera, and watch the skies")
-	case 0:
-		fmt.Println("No significant activity on the gauges")
-	case -1:
-		fmt.Println("One or more of Density, Speed or Bz could not be determined")
-	}
+	score, bz, speed, density, kp := aurora.Check(results, kpresults, 0)
+
+	fmt.Println("Aurora Score is:", score)
+	fmt.Println("This is based on the following parameters. 0 = Green, 1 = Yellow, 2 = Orange, 3 = Red:")
+	fmt.Println("Bz status:", bz, "Speed status:", speed, "Density status:", density, "Kp status:", kp)
 
 }
