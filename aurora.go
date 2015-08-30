@@ -1,14 +1,12 @@
 package aurora
 
 import (
-	"bytes"
 	"fmt"
-	"io"
+	"io/ioutil"
+	"net/http"
 	"regexp"
 	"sort"
 	"strconv"
-
-	"github.com/dutchcoders/goftp"
 )
 
 const (
@@ -54,10 +52,10 @@ var MissingData = -999.9
 func Get() map[int]map[string]float64 {
 	// We make our map now, because otherwise we'll get nil panics
 	var results map[int]map[string]float64 = make(map[int]map[string]float64)
-
+	fmt.Println("Getting File 1")
 	// getFile is a func that connects via FTP, grabs the data, passes it to extractData, then returns the data back here
-	aceMag := getFile("/pub/lists/ace/ace_mag_1m.txt")
-
+	aceMag := getFile("ace-magnetometer.txt")
+	fmt.Println("Got File 1")
 	// Now we loop through the results. No range, as we need integers
 	for i := 0; i <= len(aceMag)-1; i++ {
 		// We "made" our map[int] above, now we do the same here, for the map of our map
@@ -80,8 +78,9 @@ func Get() map[int]map[string]float64 {
 	}
 
 	// Retrieve the latest ACE data from this folder
-
-	aceSwepam := getFile("/pub/lists/ace/ace_swepam_1m.txt")
+	fmt.Println("Getting File 2")
+	aceSwepam := getFile("ace-swepam.txt")
+	fmt.Println("Got File 2")
 	for i := 0; i <= len(aceSwepam)-1; i++ {
 
 		results[i]["Density"], _ = strconv.ParseFloat(aceSwepam[0][7], 64)
@@ -98,9 +97,9 @@ func Get() map[int]map[string]float64 {
 func GetKp() map[int]map[string]float64 {
 	// We make our map now, because otherwise we'll get nil panics
 	var results map[int]map[string]float64 = make(map[int]map[string]float64)
-
-	wingKp := getFile("/pub/lists/wingkp/wingkp_list.txt")
-
+	fmt.Println("Getting File 3")
+	wingKp := getFile("wing-kp.txt")
+	fmt.Println("Got File 3")
 	for i := 0; i <= len(wingKp)-1; i++ {
 		results[i] = make(map[string]float64)
 		results[i]["Kp1Hour"], _ = strconv.ParseFloat(wingKp[i][9], 64)
@@ -112,28 +111,21 @@ func GetKp() map[int]map[string]float64 {
 }
 
 func getFile(file string) map[int][]string {
-	ftp, _ := goftp.Connect("ftp.swpc.noaa.gov:21")
-	// Log in as an anonymous user
-	ftp.Login("anonymous", "")
-	var data map[int][]string
-	_, _ = ftp.Retr(file, func(r io.Reader) error {
-		data = extractData(r)
-		return nil
-	})
-	ftp.Close()
+	res, _ := http.Get("http://services.swpc.noaa.gov/text/" + file)
+	response, _ := ioutil.ReadAll(res.Body)
+	fmt.Println(string(response))
+	data := extractData(response)
 	return data
 }
 
-func extractData(r io.Reader) map[int][]string {
+func extractData(r []byte) map[int][]string {
 	var res map[int][]string = make(map[int][]string)
 	// Make a new buffer
-	buf := new(bytes.Buffer)
-	// And read the data from the file
-	buf.ReadFrom(r)
+	buf := r
 	// This regex searches for all lines that start with a number
 	reg := regexp.MustCompile("(?m)^[0-9].+$")
 	// Put all our matches into a variable
-	data := reg.FindAllString(buf.String(), -1)
+	data := reg.FindAllString(string(buf), -1)
 	sort.Sort(sort.Reverse(sort.StringSlice(data)))
 	// This regex searches for consecutive spaces, as our data is space-separated (no pun intended)
 	reg = regexp.MustCompile("\\s+")

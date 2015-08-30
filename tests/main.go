@@ -9,6 +9,7 @@ import (
 func main() {
 	fmt.Println("Querying Spaceweather site for data..")
 	results := aurora.Get()
+
 	fmt.Println("Latest results are:")
 	for k, v := range results[0] {
 		fmt.Println(k, "-", v)
