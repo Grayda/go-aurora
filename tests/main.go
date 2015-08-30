@@ -9,20 +9,26 @@ import (
 func main() {
 	fmt.Println("Querying Spaceweather site for data..")
 	results := aurora.Get()
-	for k, v := range results {
-		fmt.Println(k, "\t\t\t\t", v)
-	}
 
-	fmt.Println()
-	switch aurora.Check(results) {
-	case 2:
-		fmt.Println("Gauges are red! Grab your camera!")
-	case 1:
-		fmt.Println("Gauges are in the orange. Prepare your camera, and watch the skies")
-	case 0:
-		fmt.Println("No significant activity on the gauges")
-	case -1:
-		fmt.Println("No usable data returned from ACE")
+	fmt.Println("Latest results are:")
+	for k, v := range results[0] {
+		fmt.Println(k, "-", v)
 	}
+	fmt.Println()
+	fmt.Println("Grabbing Kp data..")
+	kpresults := aurora.GetKp()
+
+	fmt.Println("Current Kp index is:")
+	for k, v := range kpresults[0] {
+		fmt.Println(k, "-", v)
+	}
+	fmt.Println()
+	fmt.Println("Checking these values against their thresholds..")
+
+	score, bz, speed, density, kp := aurora.Check(results, kpresults, 0)
+
+	fmt.Println("Aurora Score is:", score)
+	fmt.Println("This is based on the following parameters. 0 = Green, 1 = Yellow, 2 = Orange, 3 = Red:")
+	fmt.Println("Bz status:", bz, "Speed status:", speed, "Density status:", density, "Kp status:", kp)
 
 }

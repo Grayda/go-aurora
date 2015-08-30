@@ -32,12 +32,19 @@ Simply import the library, then call:
     Kp1hour
     Kp4hours
 
-There is also a "helper" function called `Check()` which takes the results of `Get()`, checks the Speed, Density and Bz (the three measurements aurora fans are most interested in) and gives you a value between -1 and 2 which indicates possible aurora activity:
+There is also a "helper" function called `Check()` which takes the results of `Get()`, checks the Speed, Density, Bz and Kp (the four measurements I think aurora fans are most interested in) and gives you a score out of 90, on how likely you are to see an aurora. The scores are weighted, with Kp having less significance in the final score. Weights are currently;
 
-    -1 = ACE spacecraft returned -999.9 for Bz, Density and Speed. This indicates no usable data
-    0 = Bz is greater than the warning threshold (lower = better), while Speed and Density and below the warning threshold
-    1 = Bz is less than the warning threshold, but greater than the alert threshold. Speed and density are greater than their respective warning thresholds, but less than their alert thresholds
-    2 = Bz is less than the alert threshold, and Speed and Density are greater than the alert thresholds. Grab your camera and run!
+    KpGreenWeight  = -5
+    KpYellowWeight = 2
+    KpOrangeWeight = 5
+    KpRedWeight    = 10
+
+    GreenWeight  = -10
+    YellowWeight = 10
+    OrangeWeight = 15
+    RedWeight    = 25
+
+Essentially, if Bz is in the "green" (between 20 and 0), 10 points are taken off. If Density is in the red, add 25, and so forth. I'm terrible at mathematics, statistics and so on, so if you can come up with a better model, PLEASE put in a pull request or message me!
 
 Helping out
 ===========
