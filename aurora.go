@@ -1,7 +1,6 @@
 package aurora
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -52,10 +51,8 @@ var MissingData = -999.9
 func Get() map[int]map[string]float64 {
 	// We make our map now, because otherwise we'll get nil panics
 	var results map[int]map[string]float64 = make(map[int]map[string]float64)
-	fmt.Println("Getting File 1")
 	// getFile is a func that connects via FTP, grabs the data, passes it to extractData, then returns the data back here
 	aceMag := getFile("ace-magnetometer.txt")
-	fmt.Println("Got File 1")
 	// Now we loop through the results. No range, as we need integers
 	for i := 0; i <= len(aceMag)-1; i++ {
 		// We "made" our map[int] above, now we do the same here, for the map of our map
@@ -78,9 +75,7 @@ func Get() map[int]map[string]float64 {
 	}
 
 	// Retrieve the latest ACE data from this folder
-	fmt.Println("Getting File 2")
 	aceSwepam := getFile("ace-swepam.txt")
-	fmt.Println("Got File 2")
 	for i := 0; i <= len(aceSwepam)-1; i++ {
 
 		results[i]["Density"], _ = strconv.ParseFloat(aceSwepam[0][7], 64)
@@ -97,9 +92,7 @@ func Get() map[int]map[string]float64 {
 func GetKp() map[int]map[string]float64 {
 	// We make our map now, because otherwise we'll get nil panics
 	var results map[int]map[string]float64 = make(map[int]map[string]float64)
-	fmt.Println("Getting File 3")
 	wingKp := getFile("wing-kp.txt")
-	fmt.Println("Got File 3")
 	for i := 0; i <= len(wingKp)-1; i++ {
 		results[i] = make(map[string]float64)
 		results[i]["Kp1Hour"], _ = strconv.ParseFloat(wingKp[i][9], 64)
@@ -113,7 +106,6 @@ func GetKp() map[int]map[string]float64 {
 func getFile(file string) map[int][]string {
 	res, _ := http.Get("http://services.swpc.noaa.gov/text/" + file)
 	response, _ := ioutil.ReadAll(res.Body)
-	fmt.Println(string(response))
 	data := extractData(response)
 	return data
 }
@@ -121,11 +113,10 @@ func getFile(file string) map[int][]string {
 func extractData(r []byte) map[int][]string {
 	var res map[int][]string = make(map[int][]string)
 	// Make a new buffer
-	buf := r
 	// This regex searches for all lines that start with a number
 	reg := regexp.MustCompile("(?m)^[0-9].+$")
 	// Put all our matches into a variable
-	data := reg.FindAllString(string(buf), -1)
+	data := reg.FindAllString(string(r), -1)
 	sort.Sort(sort.Reverse(sort.StringSlice(data)))
 	// This regex searches for consecutive spaces, as our data is space-separated (no pun intended)
 	reg = regexp.MustCompile("\\s+")
@@ -142,108 +133,78 @@ func extractData(r []byte) map[int][]string {
 // 0 = Density and Speed are less than their associated Warn values, Bz is greater than the associated warn levels
 // 1 = Density and Speed are greater than the warn values, but less than the alert values, Bz is less than the warn level, but greater than the alert level
 // 2 = Density and Speed are greater than the alert values, Bz is less than the alert value
-func Check(results map[int]map[string]float64, kpResults map[int]map[string]float64, i int) (score, bz, speed, density, kp int) {
+func Check(results map[int]map[string]float64, kpResults map[int]map[string]float64, i int) map[string]int {
 
-	if results[i]["Bz"] <= NoData {
-		fmt.Println("No data for Bz")
-		score += NoDataWeight
-	}
-	if results[i]["Speed"] <= NoData {
-		fmt.Println("No data for Speed")
-		score += NoDataWeight
-	}
-	if results[i]["Density"] <= NoData {
-		fmt.Println("No data for Density")
-		score += NoDataWeight
-	}
-	if results[i]["Kp"] <= NoData {
-		fmt.Println("No data for Kp")
-		score += NoDataWeight
-	}
+	var data map[string]int = make(map[string]int)
 
 	if results[i]["Bz"] <= BzGreen && results[i]["Bz"] >= BzYellow {
-		bz = 0
-		fmt.Println("Bz Green")
-		score += GreenWeight
+		data["Bz"] = 0
+		data["Score"] += GreenWeight
 	} else if results[i]["Bz"] <= BzYellow && results[i]["Bz"] >= BzOrange {
-		bz = 1
-		fmt.Println("Bz Yellow")
-		score += YellowWeight
+		data["Bz"] = 1
+		data["Score"] += YellowWeight
 	} else if results[i]["Bz"] <= BzOrange && results[i]["Bz"] >= BzRed {
-		bz = 2
-		fmt.Println("Bz Orange")
-		score += OrangeWeight
-	} else if results[i]["Bz"] <= BzRed {
-		bz = 3
-		fmt.Println("Bz Red")
-		score += RedWeight
-	} else {
-		fmt.Println("No Bz data")
-		bz = -1
+		data["Bz"] = 2
+		data["Score"] += OrangeWeight
+	} else if results[i]["Bz"] <= BzRed && results[i]["Bz"] > NoData {
+		data["Bz"] = 3
+		data["Score"] += RedWeight
+	} else if results[i]["Bz"] <= NoData {
+		data["Bz"] = -1
+		data["Score"] += NoDataWeight
 	}
 
 	if results[i]["Speed"] >= SpeedGreen && results[i]["Speed"] <= SpeedYellow {
-		speed = 0
-		fmt.Println("Speed Green")
-		score += GreenWeight
+		data["Speed"] = 0
+		data["Score"] += GreenWeight
 	} else if results[i]["Speed"] >= SpeedYellow && results[i]["Speed"] <= SpeedOrange {
-		speed = 1
-		fmt.Println("Speed Yellow")
-		score += YellowWeight
+		data["Speed"] = 1
+		data["Score"] += YellowWeight
 	} else if results[i]["Speed"] >= SpeedOrange && results[i]["Speed"] <= SpeedRed {
-		speed = 2
-		fmt.Println("Speed Orange")
-		score += OrangeWeight
+		data["Speed"] = 2
+		data["Score"] += OrangeWeight
 	} else if results[i]["Speed"] >= SpeedRed {
-		speed = 3
-		fmt.Println("Speed Red")
-		score += RedWeight
-	} else {
-		fmt.Println("No Speed data")
-		speed = -1
+		data["Speed"] = 3
+		data["Score"] += RedWeight
+	} else if results[i]["Speed"] <= NoData {
+		data["Speed"] = -1
+		data["Score"] += NoDataWeight
 	}
 
 	if results[i]["Density"] >= DensityGreen && results[i]["Density"] <= DensityYellow {
-		density = 0
-		fmt.Println("Density Green")
-		score += GreenWeight
+		data["Density"] = 0
+		data["Score"] += GreenWeight
 	} else if results[i]["Density"] >= DensityYellow && results[i]["Density"] <= DensityOrange {
-		density = 1
-		fmt.Println("Density Yellow")
-		score += YellowWeight
+		data["Density"] = 1
+		data["Score"] += YellowWeight
 	} else if results[i]["Density"] >= DensityOrange && results[i]["Density"] <= DensityRed {
-		density = 2
-		fmt.Println("Density Orange")
-		score += OrangeWeight
+		data["Density"] = 2
+		data["Score"] += OrangeWeight
 	} else if results[i]["Density"] >= DensityRed {
-		density = 3
-		fmt.Println("Density Red")
-		score += RedWeight
-	} else {
-		fmt.Println("No Density data")
-		density = -1
+		data["Density"] = 3
+		data["Score"] += RedWeight
+	} else if results[i]["Density"] <= NoData {
+		data["Density"] = -1
+		data["Score"] += NoDataWeight
 	}
 
 	if kpResults[i]["Kp"] >= KpGreen && kpResults[i]["Kp"] <= KpYellow {
-		kp = 0
-		fmt.Println("Kp Green")
-		score += KpGreenWeight
+		data["Kp"] = 0
+		data["Score"] += KpGreenWeight
 	} else if kpResults[i]["Kp"] >= KpYellow && kpResults[i]["Kp"] <= KpOrange {
-		kp = 1
-		fmt.Println("Kp Yellow")
-		score += KpYellowWeight
+		data["Kp"] = 1
+		data["Score"] += KpYellowWeight
 	} else if kpResults[i]["Kp"] >= KpOrange && kpResults[i]["Kp"] <= KpRed {
-		kp = 2
-		fmt.Println("Kp Orange")
-		score += KpOrangeWeight
+		data["Kp"] = 2
+		data["Score"] += KpOrangeWeight
 	} else if kpResults[i]["Kp"] >= KpRed {
-		kp = 3
-		fmt.Println("Kp Red")
-		score += KpRedWeight
-	} else {
-		fmt.Println("No Kp data")
-		kp = -1
+		data["Kp"] = 3
+		data["Score"] += KpRedWeight
+	} else if results[i]["Kp"] <= NoData {
+		data["Kp"] = -1
+		data["Score"] += NoDataWeight
+
 	}
 
-	return score, bz, speed, density, kp
+	return data
 }

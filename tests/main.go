@@ -25,10 +25,10 @@ func main() {
 	fmt.Println()
 	fmt.Println("Checking these values against their thresholds..")
 
-	score, bz, speed, density, kp := aurora.Check(results, kpresults, 0)
+	res := aurora.Check(results, kpresults, 0)
 
-	fmt.Println("Aurora Score is:", score)
-	fmt.Println("This is based on the following parameters. 0 = Green, 1 = Yellow, 2 = Orange, 3 = Red:")
-	fmt.Println("Bz status:", bz, "Speed status:", speed, "Density status:", density, "Kp status:", kp)
+	fmt.Println("Aurora Score is:", res["Score"])
+	fmt.Println("This is based on the following parameters. -1 = No Data, 0 = Green, 1 = Yellow, 2 = Orange, 3 = Red:")
+	fmt.Println("Bz status:", res["Bz"], "Speed status:", res["Speed"], "Density status:", res["Density"], "Kp status:", res["Kp"])
 
 }
