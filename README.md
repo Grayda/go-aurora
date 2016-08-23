@@ -1,6 +1,8 @@
 go-aurora
 =========
 
+**2016 Update: If you want an easier way to get this data, check out http://developers.auroras.live . All the heavy lifting is done for you, and you just need to parse a simple JSON. Easy!**
+
 A simple library to help astrophotographers capture the Auroras. I wrote it so I could use it with my Ninja Sphere and get alerted whenever there was potential aurora activity
 
 Usage
